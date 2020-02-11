@@ -1,9 +1,10 @@
 ﻿using Moon.Asyncs;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace MiniGames.Common
 {
-    public class GameScenarioExecutor: MonoBehaviour
+    public class GameScenarioExecutor : MonoBehaviour
     {
         public GameProgress progress;
         public GameScenarioBase scenario;
@@ -28,7 +29,7 @@ namespace MiniGames.Common
         private void LoadNextScene()
         {
             // TODO: fade in
-            // loading scene
+            SceneManager.LoadScene(nextSceneName);
             // TODO: fade out
         }
     }

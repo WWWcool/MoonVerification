@@ -5,18 +5,20 @@ namespace MiniGames.Memory
 {
     public class MemoryGameController : MonoBehaviour
     {
+        [SerializeField] private MemoryGameBoard _board;
+
         public AsyncState RunGame(MemoryGameModel gameModel)
         {
-            // game login entry point
             return Planner.Chain()
+                    .AddAction(Debug.Log, "[MemoryGameController][RunGame]")
+                    .AddFunc(_board.Init, gameModel)
                     .AddAwait(AwaitFunc)
                 ;
         }
 
         private void AwaitFunc(AsyncStateInfo state)
         {
-            // todo: game complete condition;
-            state.IsComplete = false;
+            state.IsComplete = _board.GameEnded;
         }
     }
 }
