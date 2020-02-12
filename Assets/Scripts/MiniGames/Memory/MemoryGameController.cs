@@ -10,7 +10,7 @@ namespace MiniGames.Memory
         private bool _gameEnded = false;
         private bool _initFinished = false;
         private bool _isProcessOnClick = false;
-    
+
         public AsyncState RunGame(MemoryGameModel gameModel)
         {
             _gameEnded = false;
@@ -18,6 +18,7 @@ namespace MiniGames.Memory
             return Planner.Chain()
                     .AddAction(Debug.Log, "[MemoryGameController][RunGame]")
                     .AddFunc<Action<MemoryCard>, MemoryGameModel>(_board.Init, OnCardClick, gameModel)
+                    .AddFunc(_board.Shuffle)
                     .AddAction(SetInitFinished)
                     .AddAwait(AwaitGameEnd)
                 ;
@@ -30,11 +31,11 @@ namespace MiniGames.Memory
 
         private void OnCardClick(MemoryCard card)
         {
-            if(!IsAvailableForClick())
+            if (!IsAvailableForClick() || _board.IsOpen(card))
             {
                 return;
             }
-            
+
             var asyncChain = Planner.Chain();
             asyncChain.AddAction(Debug.Log, "[MemoryGameController][OnCardClick]");
             asyncChain.AddAction(SetProcessOnClick, true);
@@ -47,6 +48,7 @@ namespace MiniGames.Memory
 
         private void CheckBoard()
         {
+            Debug.Log("[MemoryGameController][CheckBoard] - " + _board.IsEmpty().ToString());
             _gameEnded = _board.IsEmpty();
         }
 

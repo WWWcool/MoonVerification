@@ -9,7 +9,8 @@ namespace MiniGames.Memory
     public class MemoryGameBoard : MonoBehaviour
     {
         [SerializeField] private GameObject _cardPrefab = null;
-        [SerializeField] private GridLayoutGroup  _grid = null;
+        [SerializeField] private GridLayoutGroup _grid = null;
+        [SerializeField] private GameObject _shuffleNode = null;
         private List<MemoryCard> _pool;
         private List<MemoryCard> _opened;
 
@@ -33,33 +34,55 @@ namespace MiniGames.Memory
             return asyncChain;
         }
 
+        public AsyncState Shuffle()
+        {
+            var asyncChain = Planner.Chain();
+            asyncChain.AddAction(Debug.Log, "[MemoryGameBoard][Shuffle]");
+
+            // TODO we can add move anim here
+
+            for (var i = 0; i < _grid.transform.childCount; i++)
+            {
+                _grid.transform.GetChild(i).transform.parent = _shuffleNode.transform;
+            }
+
+            while (_shuffleNode.transform.childCount > 0)
+            {
+                var rnd = UnityEngine.Random.Range(0, _shuffleNode.transform.childCount);
+                _shuffleNode.transform.GetChild(rnd).transform.parent = _grid.transform;
+            }
+
+            return asyncChain;
+        }
+
+        public bool IsOpen(MemoryCard card)
+        {
+            return _opened.Contains(card);
+        }
+
         public void AddToOpen(MemoryCard card)
         {
             _opened.Add(card);
         }
 
         public AsyncState ProcessOpened()
-        {            
+        {
             var asyncChain = Planner.Chain();
             asyncChain.AddAction(Debug.Log, "[MemoryGameBoard][ProcessOpened]");
 
-            if(_opened.Count == 2)
+            if (_opened.Count == 2)
             {
-                if(_opened[0].Match(_opened[1]))
+                asyncChain.AddTimeout(1f);
+                if (_opened[0].Match(_opened[1]))
                 {
-                    foreach(var card in _opened)
-                    {
-                        asyncChain.JoinFunc(card.Appear, false);
-                        asyncChain.JoinFunc(card.SetActiveGameObject, false);
-                        _pool.Remove(card);
-                    }
+                    asyncChain.AddFunc(RemoveCardPair);
                 }
                 else
                 {
-                    foreach(var card in _opened)
-                    {
-                        asyncChain.JoinFunc(card.Flip, false);
-                    }
+                    asyncChain.AddFunc(() => Planner.Chain()
+                        .JoinFunc(_opened[0].Flip, false)
+                        .JoinFunc(_opened[1].Flip, false)
+                    );
                 }
                 asyncChain.AddAction(_opened.Clear);
             }
@@ -84,7 +107,7 @@ namespace MiniGames.Memory
             for (var i = 0; i < gameModel.numberOfCardPairs; i++)
             {
                 var index = UnityEngine.Random.Range(0, types.Count);
-                asyncChain.AddFunc(AddCardPair, types[index], onCardClick);
+                asyncChain.JoinFunc(AddCardPair, types[index], onCardClick);
                 types.RemoveAt(index);
             }
 
@@ -99,7 +122,7 @@ namespace MiniGames.Memory
             for (var i = 0; i < 2; i++)
             {
                 var card = Instantiate(_cardPrefab, _grid.transform).GetComponent<MemoryCard>();
-                asyncChain.AddAction(card.Init, texture, onCardClick);
+                asyncChain.JoinFunc(card.Init, texture, onCardClick);
                 _pool.Add(card);
             }
 
@@ -110,6 +133,25 @@ namespace MiniGames.Memory
         {
             _pool = new List<MemoryCard>();
             _opened = new List<MemoryCard>();
+        }
+
+        private AsyncState RemoveCardPair()
+        {
+            var asyncChain = Planner.Chain();
+            asyncChain.AddAction(Debug.Log, "[MemoryGameBoard][RemoveCardPair]");
+
+            asyncChain.AddFunc(() => Planner.Chain()
+                .JoinFunc(_opened[0].Appear, false)
+                .JoinFunc(_opened[1].Appear, false)
+            );
+            // asyncChain.AddFunc(() => Planner.Chain()
+            //     .JoinFunc(_opened[0].SetActiveGameObject, false)
+            //     .JoinFunc(_opened[1].SetActiveGameObject, false)
+            // );
+            asyncChain.AddAction(() => _pool.Remove(_opened[0]));
+            asyncChain.AddAction(() => _pool.Remove(_opened[1]));
+
+            return asyncChain;
         }
     }
 }
