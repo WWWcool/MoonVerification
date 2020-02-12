@@ -13,23 +13,18 @@ namespace MiniGames.Memory
         [SerializeField] private GameObject _shuffleNode = null;
         private List<MemoryCard> _pool;
         private List<MemoryCard> _opened;
+        private float _faceUpDelay = 0f;
 
-        public AsyncState Init(Action<MemoryCard> onCardClick, MemoryGameModel gameModel)
+        public AsyncState Init(Action<MemoryCard> onCardClick, GameParams gameParams)
         {
             ReinitGame();
             var asyncChain = Planner.Chain();
-            asyncChain.AddAction(Debug.Log, "[MemoryGameBoard][Init]");
+            asyncChain.AddAction(Debug.Log, "[MemoryGameBoard][Init] round: " + gameParams.roundIndex.ToString());
 
-            var groups = gameModel.GetValidSpriteGroups();
+            var group = gameParams.model.rounds[gameParams.roundIndex].spriteGroup;
+            _faceUpDelay = gameParams.model.faceUpTime;
 
-            if (groups.Length > 0)
-            {
-                asyncChain.AddFunc(InitCards, groups[(int)UnityEngine.Random.value], onCardClick, gameModel);
-            }
-            else
-            {
-                asyncChain.AddAction(Debug.LogError, "[MemoryGameBoard][Init] can`t get valid sprite group");
-            }
+            asyncChain.AddFunc(InitCards, group, onCardClick, gameParams);
 
             return asyncChain;
         }
@@ -43,13 +38,13 @@ namespace MiniGames.Memory
 
             for (var i = 0; i < _grid.transform.childCount; i++)
             {
-                _grid.transform.GetChild(i).transform.parent = _shuffleNode.transform;
+                _grid.transform.GetChild(i).transform.SetParent(_shuffleNode.transform);
             }
 
             while (_shuffleNode.transform.childCount > 0)
             {
                 var rnd = UnityEngine.Random.Range(0, _shuffleNode.transform.childCount);
-                _shuffleNode.transform.GetChild(rnd).transform.parent = _grid.transform;
+                _shuffleNode.transform.GetChild(rnd).transform.SetParent(_grid.transform);
             }
 
             return asyncChain;
@@ -72,7 +67,7 @@ namespace MiniGames.Memory
 
             if (_opened.Count == 2)
             {
-                asyncChain.AddTimeout(1f);
+                asyncChain.AddTimeout(_faceUpDelay);
                 if (_opened[0].Match(_opened[1]))
                 {
                     asyncChain.AddFunc(RemoveCardPair);
@@ -97,14 +92,14 @@ namespace MiniGames.Memory
 
         // Internal
 
-        private AsyncState InitCards(SpriteGroup group, Action<MemoryCard> onCardClick, MemoryGameModel gameModel)
+        private AsyncState InitCards(SpriteGroup group, Action<MemoryCard> onCardClick, GameParams gameParams)
         {
             var asyncChain = Planner.Chain();
             asyncChain.AddAction(Debug.Log, "[MemoryGameBoard][InitCards]");
 
             var types = new List<Texture2D>(group.sprites);
 
-            for (var i = 0; i < gameModel.numberOfCardPairs; i++)
+            for (var i = 0; i < gameParams.model.rounds[gameParams.roundIndex].numberOfCardPairs; i++)
             {
                 var index = UnityEngine.Random.Range(0, types.Count);
                 asyncChain.JoinFunc(AddCardPair, types[index], onCardClick);
@@ -133,6 +128,10 @@ namespace MiniGames.Memory
         {
             _pool = new List<MemoryCard>();
             _opened = new List<MemoryCard>();
+            foreach (Transform child in _grid.transform)
+            {
+                GameObject.Destroy(child.gameObject);
+            }
         }
 
         private AsyncState RemoveCardPair()
@@ -144,10 +143,12 @@ namespace MiniGames.Memory
                 .JoinFunc(_opened[0].Appear, false)
                 .JoinFunc(_opened[1].Appear, false)
             );
-            // asyncChain.AddFunc(() => Planner.Chain()
-            //     .JoinFunc(_opened[0].SetActiveGameObject, false)
-            //     .JoinFunc(_opened[1].SetActiveGameObject, false)
-            // );
+
+            asyncChain.AddFunc(() => Planner.Chain()
+                .AddAwait(_opened[0].AwaitTweenFinished)
+                .AddAwait(_opened[1].AwaitTweenFinished)
+            );
+
             asyncChain.AddAction(() => _pool.Remove(_opened[0]));
             asyncChain.AddAction(() => _pool.Remove(_opened[1]));
 

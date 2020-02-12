@@ -4,12 +4,22 @@ using UnityEngine;
 
 namespace MiniGames.Memory
 {
+    public class GameParams
+    {
+        public MemoryGameModel model = null;
+        public int roundIndex = 0;
+    }
+
     public class MemoryScenario : GameScenarioBase
     {
-        public MemoryGameController controller;
+        public MemoryGameController controller = null;
+        public MemoryDifficultyController difficultyController = null;
+        public CameraController cameraController = null;
+        public DifficultyType difficulty = DifficultyType.Normal;
+        public UIController uiController = null;
 
-        //TODO: select gameModel with difficulty controller class
-        public MemoryGameModel defaultGameModel;
+        private MemoryGameModel _currentModel = null;
+        private GameParams _params = null;
 
         protected override AsyncState OnExecute()
         {
@@ -23,36 +33,51 @@ namespace MiniGames.Memory
         private AsyncState Intro()
         {
             return Planner.Chain()
-                    // TODO: intro cut scene. Run camera animation. Await animation finish
-                    .AddAction(Debug.Log, "start intro")
-                    .AddTimeout(1f)
-                    .AddAction(Debug.Log, "intro finished")
+                    .AddAction(Debug.Log, "[MemoryScenario][Intro] start intro")
+                    .AddFunc(cameraController.MoveToBoard)
+                    .JoinFunc(uiController.ShowUI)
+                    .AddAction(Debug.Log, "[MemoryScenario][Intro] intro finished")
                 ;
         }
 
         private AsyncState GameCircle()
         {
-            var asyncChain = Planner.Chain();
-            asyncChain.AddAction(Debug.Log, "game started");
-            for (var i = 0; i < defaultGameModel.numberOfRounds; i++)
-            {
-                asyncChain
-                        .AddFunc(controller.RunGame, defaultGameModel)
-                        .AddFunc(progress.IncrementProgress)
-                    ;
-            }
+            _currentModel = difficultyController.GetModel(difficulty);
 
-            asyncChain.AddAction(Debug.Log, "game finished");
+            var asyncChain = Planner.Chain();
+            if (_currentModel != null)
+            {
+                _params = new GameParams() { model = _currentModel };
+
+                asyncChain.AddAction(Debug.Log, "[MemoryScenario][GameCircle] game started");
+                asyncChain.AddFunc(progress.ResetProgress, _currentModel.rounds.Length);
+
+                for (var i = 0; i < _currentModel.rounds.Length; i++)
+                {
+
+                    asyncChain.AddAction(Debug.Log, "[MemoryScenario][GameCircle] start round: " + i.ToString());
+                    asyncChain
+                            .AddFunc(controller.RunGame, _params)
+                            .AddFunc(progress.IncrementProgress)
+                        ;
+                    asyncChain.AddAction(() => _params.roundIndex++);
+                }
+                asyncChain.AddAction(Debug.Log, "[MemoryScenario][GameCircle] game finished");
+            }
+            else
+            {
+                asyncChain.AddAction(Debug.LogError, "[MemoryScenario][GameCircle] can`t find game model for difficulty: " + difficulty.ToString());
+            }
             return asyncChain;
         }
 
         private AsyncState Outro()
         {
-            // TODO: outro cut scene. Run camera back to origin position. Await animation finish
             return Planner.Chain()
-                    .AddAction(Debug.Log, "start outro")
-                    .AddTimeout(1f)
-                    .AddAction(Debug.Log, "outro finished")
+                    .AddAction(Debug.Log, "[MemoryScenario][Outro] start outro")
+                    .AddFunc(cameraController.MoveBack)
+                    .JoinFunc(uiController.HideUI)
+                    .AddAction(Debug.Log, "[MemoryScenario][Outro] outro finished")
                 ;
         }
 

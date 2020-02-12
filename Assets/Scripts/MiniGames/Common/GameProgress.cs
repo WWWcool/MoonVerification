@@ -5,16 +5,24 @@ namespace MiniGames.Common
 {
     public class GameProgress : MonoBehaviour
     {
-        public void ResetProgress(int count)
+        [SerializeField] private UIController uiController = null;
+        private int _count = 0;
+        private int _maxCount = 0;
+
+        public AsyncState ResetProgress(int count)
         {
-            // TODO: reset progress to zero. Set progress max
+            _count = 0;
+            _maxCount = count;
+            return Planner.Chain()
+                    .AddFunc(uiController.ResetProgress, count)
+                ;
         }
 
         public AsyncState IncrementProgress()
         {
+            _count++;
             return Planner.Chain()
-                    // TODO: run progress animation, await finish
-                    .AddTimeout(1f)
+                    .AddFunc(uiController.IncrementProgress, _count)
                 ;
         }
     }

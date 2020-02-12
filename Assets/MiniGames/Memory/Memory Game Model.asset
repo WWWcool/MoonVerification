@@ -12,31 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 416d481cdf764001aa8c1ffbe2c5ef06, type: 3}
   m_Name: Memory Game Model
   m_EditorClassIdentifier: 
-  numberOfCardPairs: 4
-  numberOfRounds: 1
-  spriteGroups:
-  - type: 0
-    sprites:
-    - {fileID: 2800000, guid: 17528506a32895e4589af09d8dbd6f81, type: 3}
-    - {fileID: 2800000, guid: a65c9bfb6f89a5c488ee0a5a77aa40ea, type: 3}
-    - {fileID: 2800000, guid: a12e4db744cdb5d428d23a61f4ae8623, type: 3}
-    - {fileID: 2800000, guid: c7f99ce2fdee0d54381e790e65245cf7, type: 3}
-    - {fileID: 2800000, guid: ec07b57ecee9c2142a48722779e033f4, type: 3}
-    - {fileID: 2800000, guid: 5dcfb3c32f0ed6244b371518c850fc64, type: 3}
-    - {fileID: 2800000, guid: f915466470f29f149a1a34b19bcd0449, type: 3}
-    - {fileID: 2800000, guid: 477e3d770cdb9054ea14b263a3c67561, type: 3}
-    - {fileID: 2800000, guid: 4ed66620f08e09d499ca01b59a4281cc, type: 3}
-    - {fileID: 2800000, guid: 222d8f586cf3e194ba7c1bda53a6a0c9, type: 3}
-    - {fileID: 2800000, guid: 4478f0e6e95bbc5479d2b55b9d0ca2d6, type: 3}
-    - {fileID: 2800000, guid: d072aeea13999f64793e08c4eaee75b2, type: 3}
-    - {fileID: 2800000, guid: 475be92676467cf48b8b40418b6524db, type: 3}
-    - {fileID: 2800000, guid: 0bae71fb904d6764bb2bf5123dd8a8a2, type: 3}
-    - {fileID: 2800000, guid: 8cccff4351fcd1c4c92ee220f628686e, type: 3}
-    - {fileID: 2800000, guid: 8e9a12c5bfc0d3c499b92ac01b4ca197, type: 3}
-    - {fileID: 2800000, guid: ccdbd3c7962a56e40a4748ebd1ec0de5, type: 3}
-    - {fileID: 2800000, guid: 3095674779ce9ad4691bcf23f98758e5, type: 3}
-    - {fileID: 2800000, guid: 62b08483a1849b243953ad146fcf7dce, type: 3}
-    - {fileID: 2800000, guid: 92c1aeabda8b2c7469af454d62664bce, type: 3}
-    - {fileID: 2800000, guid: cac2cc77e03eaf84682c8eb3639e1afd, type: 3}
-    - {fileID: 2800000, guid: 4ac8095654ac727469813850331da005, type: 3}
-    - {fileID: 2800000, guid: 7c2ebd6fb1330f3469f2542c2f13e9ec, type: 3}
+  rounds:
+  - numberOfCardPairs: 1
+    spriteGroup: {fileID: 11400000, guid: 38dcf1f0359afef49a09cdadee6abbea, type: 2}
+  - numberOfCardPairs: 3
+    spriteGroup: {fileID: 11400000, guid: 3881f5afe2cad7f4ab55006788cdbd18, type: 2}
+  faceUpTime: 0.2

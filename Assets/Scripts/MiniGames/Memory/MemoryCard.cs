@@ -98,6 +98,11 @@ namespace MiniGames.Memory
                 ;
         }
 
+        public void AwaitTweenFinished(AsyncStateInfo state)
+        {
+            state.IsComplete = !_tweenRunning;
+        }
+
         // Internal
 
         private void OnMouseDown()
@@ -140,11 +145,6 @@ namespace MiniGames.Memory
             _tweenRunning = true;
             tween.onComplete += () => _tweenRunning = false;
             return tween;
-        }
-
-        private void AwaitTweenFinished(AsyncStateInfo state)
-        {
-            state.IsComplete = !_tweenRunning;
         }
     }
 }

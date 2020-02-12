@@ -11,13 +11,13 @@ namespace MiniGames.Memory
         private bool _initFinished = false;
         private bool _isProcessOnClick = false;
 
-        public AsyncState RunGame(MemoryGameModel gameModel)
+        public AsyncState RunGame(GameParams gameParams)
         {
             _gameEnded = false;
             _initFinished = false;
             return Planner.Chain()
                     .AddAction(Debug.Log, "[MemoryGameController][RunGame]")
-                    .AddFunc<Action<MemoryCard>, MemoryGameModel>(_board.Init, OnCardClick, gameModel)
+                    .AddFunc<Action<MemoryCard>, GameParams>(_board.Init, OnCardClick, gameParams)
                     .AddFunc(_board.Shuffle)
                     .AddAction(SetInitFinished)
                     .AddAwait(AwaitGameEnd)
